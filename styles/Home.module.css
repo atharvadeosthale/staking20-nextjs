@@ -12,6 +12,21 @@
   align-items: center;
 }
 
+.stakeContainer {
+  display: flex;
+  margin-bottom: 2rem;
+  width: 230px;
+}
+
+.textbox {
+  padding: 5px;
+}
+
+.button {
+  padding: 5px;
+  margin-left: 10px;
+}
+
 .title a {
   color: #f213a4;
   text-decoration: none;
