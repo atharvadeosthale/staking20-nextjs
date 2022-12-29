@@ -5,10 +5,15 @@ import {
   useContractRead,
   useContractWrite,
   useTokenBalance,
+  Web3Button,
 } from "@thirdweb-dev/react";
+
 import { ethers } from "ethers";
+
 import { useEffect, useState } from "react";
 import styles from "../styles/Home.module.css";
+
+const stakingContractAddress = "0x942cE010A29D4bF9fe3d5cc9610C6ba536C516EA";
 
 export default function Home() {
   const address = useAddress();
@@ -16,7 +21,7 @@ export default function Home() {
 
   // Initialize all the contracts
   const { contract: staking, isLoading: isStakingLoading } = useContract(
-    "0x942cE010A29D4bF9fe3d5cc9610C6ba536C516EA",
+    stakingContractAddress,
     "custom"
   );
 
@@ -42,30 +47,6 @@ export default function Home() {
     refetch: refetchStakingInfo,
     isLoading: isStakeInfoLoading,
   } = useContractRead(staking, "getStakeInfo", address || "0");
-
-  // Contract functions
-  const { mutateAsync: claimRewards, isLoading: isClaimLoading } =
-    useContractWrite(staking, "claimRewards");
-  const { mutateAsync: unstake, isLoading: isUnstakeLoading } =
-    useContractWrite(staking, "withdraw");
-
-  const stakeTokens = async () => {
-    try {
-      // Approve the amount to stake so that the staking contract can transfer the tokens
-      await stakingToken.setAllowance(
-        "0x942cE010A29D4bF9fe3d5cc9610C6ba536C516EA",
-        amountToStake
-      );
-      // Call the stake function
-      await staking.call("stake", ethers.utils.parseEther(amountToStake));
-
-      // Stake completed
-      alert("Tokens successfully staked!");
-    } catch (err) {
-      console.error("Error staking tokens!", err);
-      alert("Error staking tokens!");
-    }
-  };
 
   useEffect(() => {
     setInterval(() => {
@@ -99,48 +80,49 @@ export default function Home() {
             value={amountToStake}
             onChange={(e) => setAmountToStake(e.target.value)}
           />
-          <button
-            disabled={
-              isStakingLoading ||
-              isStakingTokenLoading ||
-              isUnstakeLoading ||
-              isClaimLoading
-            }
+
+          <Web3Button
             className={styles.button}
-            onClick={stakeTokens}
+            contractAddress={stakingContractAddress}
+            action={async (contract) => {
+              await stakingToken.setAllowance(
+                stakingContractAddress,
+                amountToStake
+              );
+              await contract.call(
+                "stake",
+                ethers.utils.parseEther(amountToStake)
+              );
+              alert("Tokens staked successfully!");
+            }}
           >
             Stake!
-          </button>
-          <button
-            disabled={
-              isStakingLoading ||
-              isStakingTokenLoading ||
-              isUnstakeLoading ||
-              isClaimLoading
-            }
+          </Web3Button>
+
+          <Web3Button
             className={styles.button}
-            onClick={async () => {
-              await unstake([ethers.utils.parseEther(amountToStake)]);
-              alert("Tokens unstaked!");
+            contractAddress={stakingContractAddress}
+            action={async (contract) => {
+              await contract.call(
+                "withdraw",
+                ethers.utils.parseEther(amountToStake)
+              );
+              alert("Tokens unstaked successfully!");
             }}
           >
             Unstake!
-          </button>
-          <button
-            disabled={
-              isStakingLoading ||
-              isStakingTokenLoading ||
-              isUnstakeLoading ||
-              isClaimLoading
-            }
+          </Web3Button>
+
+          <Web3Button
             className={styles.button}
-            onClick={async () => {
-              await claimRewards();
-              alert("Rewards claimed!");
+            contractAddress={stakingContractAddress}
+            action={async (contract) => {
+              await contract.call("claimRewards");
+              alert("Rewards claimed successfully!");
             }}
           >
             Claim rewards!
-          </button>
+          </Web3Button>
         </div>
 
         <div className={styles.grid}>
